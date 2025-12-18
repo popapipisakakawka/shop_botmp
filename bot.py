@@ -371,12 +371,16 @@ async def topup(call: types.CallbackQuery):
 
 @dp.message_handler(state=TopUp.waiting_amount)
 async def topup_amount(msg: types.Message, state: FSMContext):
-    if not msg.text.isdigit():
-        await msg.answer("❄️ Введите число")
+    try:
+        amount = float(msg.text.replace(",", "."))
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        await msg.answer("❌ Введите корректную сумму, например: 1.5")
         return
 
-    amount = int(msg.text)
     invoice = create_invoice(amount, msg.from_user.id)
+
 
     async with aiosqlite.connect("shop.db") as db:
         await db.execute(
